@@ -1,6 +1,6 @@
 {
   "name": "nlp-router",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "associate metadata or calls with patterns of speech and analysis using NLP",
   "main": "src/index.js",
   "directories": {
