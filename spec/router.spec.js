@@ -98,4 +98,57 @@ describe('Router', function () {
       expect(router.evaluate('anyone there?')).to.equal(undefined)
     })
   })
+
+  describe('with pattern indicating multiple flag', function () {
+    let router
+    before(function () {
+      router = Router()
+      return Promise.all([
+        router.addRule(
+          'tell',
+          {
+            pattern: '{action,[VB VBP]} {target,[NN NNP]} {message=/.*/+}'
+          }, (d) => `${d.values.target}, ${d.values.message}`)
+      ])
+    })
+
+    it('should extract tokens correctly', function () {
+      const match = router.evaluate('tell cheris not to worry')
+      match.value(match.data).should.equal('cheris, not to worry')
+    })
+  })
+
+  describe('with token using a multiple flag', function () {
+    let router
+    before(function () {
+      router = Router()
+      return Promise.all([
+        router.addRule(
+          'tell',
+          {
+            ordered: true,
+            tokens: [
+              {
+                name: 'action',
+                pos: ['VB', 'VBP']
+              },
+              {
+                name: 'target',
+                pos: ['NN', 'NNP']
+              },
+              {
+                name: 'message',
+                pattern: /.*/,
+                multiple: true
+              }
+            ]
+          }, (d) => `${d.values.target}, ${d.values.message}`)
+      ])
+    })
+
+    it('should extract tokens correctly', function () {
+      const match = router.evaluate('tell cheris not to worry')
+      match.value(match.data).should.equal('cheris, not to worry')
+    })
+  })
 })

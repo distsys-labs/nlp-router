@@ -25,6 +25,12 @@ function filterAttributes (rule, data) {
   if (rule.degree && rule.degree > data.degree) {
     return false
   }
+  if (rule.politeness && rule.politeness > data.politeness) {
+    return false
+  }
+  if (rule.dirtiness && rule.dirtiness > data.politeness) {
+    return false
+  }
   return true
 }
 
@@ -44,7 +50,7 @@ function compileOrdered (rule) {
       di = next
       if (dt) {
         values[ rt.name ] = dt.value
-        ri ++
+        ri++
       } else {
         missed = true
       }
@@ -71,7 +77,7 @@ function compileUnordered (rule) {
       let [, dt] = findNext(rt, data.tokens)
       if (dt) {
         values[ rt.name ] = dt.value
-        ri ++
+        ri++
       } else {
         missed = true
       }
@@ -89,15 +95,26 @@ function findNext (criteria, tokens, start = 0) {
   let index = start
   do {
     let t = tokens[ index ]
-    index ++
+    index++
     if (criteria.match && criteria.match.indexOf(t.value) < 0 && criteria.match.indexOf(t.alt) < 0) {
       continue
     }
     if (criteria.pos && criteria.pos.indexOf(t.pos) < 0) {
       continue
     }
-    if (criteria.pattern && !criteria.pattern.test(t.value) && !criteria.pattern.test(t.alt)) {
-      continue
+    if (criteria.pattern) {
+      if (
+        !criteria.multiple &&
+        !criteria.pattern.test(t.value) &&
+        !criteria.pattern.test(t.alt)
+      ) {
+        continue
+      } else if (criteria.pattern && criteria.multiple) {
+        const text = tokens.slice(index - 1).map(x => x.value).join(' ')
+        if (criteria.pattern.test(text)) {
+          t = {value: text}
+        }
+      }
     }
     if (criteria.negated && !criteria.negated) {
       continue
@@ -172,6 +189,8 @@ function parse (sentence) {
     negated: data.profile.negated,
     sentiment: data.profile.label,
     degree: data.profile.sentiment,
+    politeness: data.profile.politeness,
+    dirtiness: data.profile.dirtiness,
     entities: data.entities,
     tokens: data.tokens.map(token => {
       return {
@@ -179,12 +198,27 @@ function parse (sentence) {
         value: token.raw,
         alt: token.norm,
         negated: token.profile.negated,
+        acronym: token.attr.acronym,
+        abbreviation: token.attr.abbr,
         plural: token.attr.plural,
         verb: token.attr.verb,
         entity: token.attr.entity,
         deps: token.deps
       }
     })
+  }
+}
+
+function processEntity (data, token) {
+  if (token.entity >= 0) {
+    const entity = data.entities[ token.entity ]
+    return {
+      value: entity.raw,
+      alt: entity.raw,
+      type: entity.type || 'unknown'
+    }
+  } else {
+    return undefined
   }
 }
 
@@ -198,7 +232,21 @@ function processRule (rule, data, values) {
       sentiment: data.sentiment,
       degree: data.degree,
       confidence: data.confidence,
-      tense: data.tense
+      tense: data.tense,
+      politeness: data.politeness,
+      dirtiness: data.dirtiness,
+      tokens: data.tokens.map(token => {
+        return {
+          alt: token.alt,
+          entity: processEntity(data, token),
+          abbreviation: token.abbreviation || false,
+          acronym: token.acronym || false,
+          plural: token.plural || false,
+          verb: token.verb || false,
+          pos: token.pos,
+          value: token.value
+        }
+      })
     }
   }
 }

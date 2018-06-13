@@ -143,14 +143,30 @@ match.value(match.data.values)
 
 The data returned in the match will contain the properties:
 
+ * `sentiment` - 'positive'|'neutral'|'mixed'|'negative'
+ * `confidence` - %
+ * `degree` - %
+ * `dirtiness` - %
+ * `ordered` - true|false
+ * `politeness` - %
+ * `tense` - 'past'|'present'
+ * `tokens` - the full token array extracted during sentence analysis
+ * `type` - 'declarative'|'imperative'|'interrogative'
  * `values` - a hash of name/value pairs extracted
- * `ordered`: true|false,
- * `type`: 'declarative'|'imperative'|'interrogative',
- * `sentiment`: 'positive'|'neutral'|'mixed'|'negative',
- * `degree`: %,
- * `confidence`: %,
- * `tense`: 'past'|'present'
 
+Each token has the following properties:
+
+ * `abbreviation` - true|false
+ * `acronym` - true|false
+ * `alt` - alternate text for the tag's value
+ * `entity` - either undefined or a hash with the following details:
+    * `alt` - alternate text content
+    * `value` - the value of the entity detected
+    * `type` - 'unknown'|'email'|'ip'|etc.
+ * `plural` - true|false
+ * `pos` - part of speech tag,
+ * `value` - text content for the tag,
+ * `verb` - true|false
 
 [travis-image]: https://travis-ci.org/deftly/nlp-router.svg?branch=master
 [travis-url]: https://travis-ci.org/deftly/nlp-router

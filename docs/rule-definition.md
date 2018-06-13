@@ -23,6 +23,7 @@ Each rule can be defined using the following data structure. After showing the l
       pos: ''|[], // part of speech tag(s) to filter by
       match: ''|[], // literal values to limit matches by
       pattern: //,  // regex to limit matches
+      multiple: true|false, // allows regex to match multiple words - not allowed with pos
       negated: true|false // only valid if one or more pos tags are included
     }
   ]
@@ -46,7 +47,7 @@ Examples:
  * `{state,!NN=[on,running,healthy]}` - negated tag named 'state'
  * `{address,NN=/.../}` - tag named 'address' with regex for matching valid forms of address
  * `{inquiry,[WDT,WP]}` - tag named 'inquiry' which allows for either part of speech 
-
+ * `{phrase,=/.../+}` - tag named 'phrase' with regex. the `+` allows it to span multiple words. Only valid without parts of speech tags
 
 ### ordered
 
@@ -62,11 +63,19 @@ Allows for matching based on detected sentiment.
 
 ### degree
 
-Match if the degree of the sentiment matches the percentage (expressed in decimal form) or higher.
+Match if the degree of the sentiment is equal to or greater than the percentage (expressed in decimal form).
 
 ### confidence
 
-Match if the degree of confidence in the sentence's evaluation meets the percentage (expressed in decimal form) or higher.
+Match if the degree of confidence in the sentence's evaluation is equal to or greater than the percentage (expressed in decimal form).
+
+### politeness
+
+Matches if the politeness ranking is equal to or greater than the percentage (in decimal form).
+
+### dirtiness
+
+Matches if the dirtiness ranking is equal to or greater than the percentage (in decimal form).
 
 ### tense
 
@@ -90,7 +99,11 @@ The words that are legal matches for the part(s) of speech.
 
 ### tags - pattern
 
-A regex to limit legal matches for the part(s) of speech.
+A regular expression to limit legal matches for the part(s) of speech. Can also be used without a pos tag to capture a token or multiple tokens (see `multiple`)
+
+### tags - multiple
+
+Allows the regular expression to capture more than one token. Not allowed with `pos`.
 
 ### tags - negated
 

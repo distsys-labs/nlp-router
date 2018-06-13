@@ -12,6 +12,7 @@
 | `CC` | Coordinating conjunction  | `and`, `but`, `or` |
 | `CD` | Cardinal number  | `one`, `two`, `1`, `2` |
 | `DT` | Determiner  | `the`, `some` |
+| `EM` | Emoticon | `:)`, `:(` |
 | `EX` | Existential there | `there` |
 | `FW` | Foreign word | `mon dieu` |
 | `IN` | Preposition | `of`, `in`, `by` |

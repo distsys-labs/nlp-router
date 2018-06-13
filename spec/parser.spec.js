@@ -4,8 +4,8 @@ const parser = require('../src/parser')
 
 describe('Parser', function () {
   describe('when extracting tokens from pattern', function () {
-    it('should ', function () {
-      parser.extract(`{action,VBP} the {target,[NN NNP NNPS NNS]} and go {direction,IN=[up,down, left, right]} {location=/[a-z]+town/}`)
+    it('should extract pattern correctly', function () {
+      parser.extract(`{action,VBP} the {target,[NN NNP NNPS NNS]} and go {direction,IN=[up,down, left, right]} {location=/[a-z]+town/} {rest=/.+/+}`)
         .should.eql(
           [
             {
@@ -36,6 +36,11 @@ describe('Parser', function () {
             {
               name: 'location',
               pattern: /[a-z]+town/
+            },
+            {
+              name: 'rest',
+              pattern: /.+/,
+              multiple: true
             }
           ]
         )
@@ -222,22 +227,22 @@ describe('Parser', function () {
   describe('when performing full analysis', function () {
     it('should resolve rule when valid', function () {
       return parser.analyze({
-        pattern: '{action,VRB} {target,[NN NRP NNS NRPS]}',
+        pattern: '{action,VBP} {target,[NN NNP NNS NNPS]}',
         type: 'imperative'
       }, 'one').should.eventually.eql({
         name: 'one',
-        pattern: '{action,VRB} {target,[NN NRP NNS NRPS]}',
+        pattern: '{action,VBP} {target,[NN NNP NNS NNPS]}',
         type: 'imperative',
         ordered: true,
         rank: 21,
         tokens: [
           {
             name: 'action',
-            pos: ['VRB']
+            pos: ['VBP']
           },
           {
             name: 'target',
-            pos: ['NN', 'NRP', 'NNS', 'NRPS']
+            pos: ['NN', 'NNP', 'NNS', 'NNPS']
           }
         ]
       })
@@ -245,7 +250,7 @@ describe('Parser', function () {
 
     it('should reject with detailed error when invalid', function () {
       return parser.analyze({
-        pattern: '{action,VRB} {target,[NN NRP NNS NRPS]}',
+        pattern: '{action,VBP} {target,[NN NNP NNS NNPS]}',
         type: 'interclarative'
       }, 'one').should.be.rejectedWith(
         'child "type" fails because ["type" must be one of [declarative, imperative, interrogative]]'

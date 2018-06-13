@@ -10,7 +10,7 @@ const log = require('bole')('nlp-rule')
 // "and did you not know in your hearts that the penalty for taking such power into our own hands would be great torment of the soul and mind?"
 // and they rejected these words and closed their browser tabs with a great shout and cast his source code into utter darkness
 // though some could not escape the truth of these things and were troubled in their hearts ...
-const PATTERN_EXTRACTION_REGEX = /([a-zA-Z0-9;:.,!?"]+|[{]([a-zA-Z][a-zA-Z0-9_]+)([ ,]{1,2}(\[([!A-Z$#\(\)\".:, ]+)\]|([!A-Z$]{2,5})|([!#\(\)\".:,]{1,2})))?([ =]{1,3}(\[([^\[\]}]+[ ,]{0,2})+\]|[^\[\]}]+|[\/][^\/]+[\/]))?[}])/g
+const PATTERN_EXTRACTION_REGEX = /([a-zA-Z0-9;:.,!?"]+|[{]([a-zA-Z][a-zA-Z0-9_]+)([ ,]{1,2}(\[([!A-Z$#()".:, ]+)\]|([!A-Z$]{2,5})|([!#()".:,]{1,2})))?([ =]{1,3}(\[([^/[\]}]+[ ,]{0,2})+\]|[^/[\]}]+|[/][^/]+[/]([+])?))?[}])/g
 
 /*
  ok, so here's the breakdown:
@@ -52,10 +52,11 @@ const SINGLE_POS_INDEX = 4
 const MULTI_POS_INDEX = 5
 const SINGLE_VALUE_INDEX = 9
 const MULTI_VALUE_INDEX = 10
+const MULTIPLE_FLAG_INDEX = 11
 
 const VALID_POS_TAGS = [
   ',', ':', '.', '"', '(', ')', '#',
-  'CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS',
+  'CC', 'CD', 'DT', 'EM', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS',
   'MD', 'NN', 'NNP', 'NNPS', 'NNS', 'PDT', 'POS', 'PP', 'PRP$',
   'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG',
   'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP', 'WRB'
@@ -73,14 +74,17 @@ const RULE_SCHEMA = joi.object().keys(
     type: joi.string().only(VALID_TYPES),
     sentiment: joi.string().only(VALID_SENTIMENTS),
     tense: joi.string().only(VALID_TENSES),
-    degree: joi.number().min(.01).max(1.00),
-    confidence: joi.number().min(.01).max(1.00),
+    degree: joi.number().min(0.01).max(1.00),
+    confidence: joi.number().min(0.01).max(1.00),
+    dirtiness: joi.number().min(0.01).max(1.00),
+    politeness: joi.number().min(0.01).max(1.00),
     tokens: joi.array().items(
       joi.object().keys({
         name: joi.string().required(),
-        pos: joi.array().items(joi.string()),
+        pos: joi.array().items(joi.string().only(VALID_POS_TAGS)),
         match: joi.array().items(joi.string()),
         pattern: joi.any(),
+        multiple: joi.boolean(),
         negated: joi.boolean()
       })
     )
@@ -150,14 +154,18 @@ function extract (pattern) {
           let value = match[ SINGLE_VALUE_INDEX ]
           if (/^[ ]/.test(value)) {
             token.match = [ value.replace(/^[ ]/, '') ]
-          } else if (/[\/][^\/]+[\/]/.test(value)) {
-            value = new RegExp(value.slice(1, -1))
-            token.pattern = value
+          } else if (/[/][^/]+[/]/.test(value)) {
+            if (match[ MULTIPLE_FLAG_INDEX ]) {
+              token.pattern = new RegExp(value.slice(1, -2))
+              token.multiple = true
+            } else {
+              token.pattern = new RegExp(value.slice(1, -1))
+            }
           }
         }
         tokens.push(token)
       } else {
-        placeholders ++
+        placeholders++
         tokens.push({
           name: `placeholder_${placeholders}`,
           match: [ match[ 1 ] ]
@@ -182,6 +190,12 @@ function rank (rule) {
   if (rule.sentiment) {
     score += 5
   }
+  if (rule.politeness) {
+    score += 5
+  }
+  if (rule.dirtiness) {
+    score += 5
+  }
   if (rule.degree) {
     score += 5
   }
@@ -191,13 +205,13 @@ function rank (rule) {
   if (rule.tokens) {
     rule.tokens.forEach(token => {
       if (token.pos && token.pos.length > 0) {
-        score += .5
+        score += 0.5
       }
       if (token.match && token.match.length > 0) {
-        score += .5
+        score += 0.5
       }
       if (token.pattern) {
-        score += .5
+        score += 0.5
       }
     })
   }
