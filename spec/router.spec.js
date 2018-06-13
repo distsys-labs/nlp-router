@@ -38,19 +38,19 @@ describe('Router', function () {
     it('should match eagerly', function () {
       let match = router.evaluate('say hello to my little friend')
       match.should.partiallyEql({
-          data: {
-            name: 'greet',
-            confidence: 1.1666666666666667,
-            degree: 0,
-            ordered: true,
-            sentiment: 'neutral',
-            tense: 'present',
-            type: 'imperative',
-            values: {
-              name: 'friend'
-            }
+        data: {
+          name: 'greet',
+          confidence: 1.1666666666666667,
+          degree: 0,
+          ordered: true,
+          sentiment: 'neutral',
+          tense: 'present',
+          type: 'imperative',
+          values: {
+            name: 'friend'
           }
-        })
+        }
+      })
       match.value(match.data).should.equal('hi, friend')
     })
 
@@ -90,6 +90,12 @@ describe('Router', function () {
             }
           }
         })
+    })
+
+    it('should return null when nothing matches', function () {
+      router.deleteRule('unknown')
+        .should.eql([true, 0])
+      expect(router.evaluate('anyone there?')).to.equal(undefined)
     })
   })
 })

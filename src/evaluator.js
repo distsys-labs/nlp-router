@@ -204,16 +204,18 @@ function processRule (rule, data, values) {
 }
 
 function match (rules, sentence) {
-  const data = parse(sentence)
-  let index = 0
-  do {
-    const rule = rules[ index ]
-    const result = rule.fn(data)
-    if (result) {
-      return result
-    }
-    index ++
-  } while (index < rules.length)
+  if (rules && rules.length) {
+    const data = parse(sentence)
+    let index = 0
+    do {
+      const rule = rules[ index ]
+      const result = rule.fn(data)
+      if (result) {
+        return result
+      }
+      index ++
+    } while (index < rules.length)
+  }
   return undefined
 }
 

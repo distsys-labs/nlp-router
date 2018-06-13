@@ -46,12 +46,16 @@ function deleteRule (state, name) {
 
 function evaluate (state, sentence) {
   const match = evaluator.match(state.rules, sentence)
-  const value = state.values[ match.name ]
-  const data = match.data
-  data.name = match.name
-  return {
-    data,
-    value
+  if (match) {
+    const value = state.values[match.name]
+    const data = match.data
+    data.name = match.name
+    return {
+      data,
+      value
+    }
+  } else {
+    return undefined
   }
 }
 
